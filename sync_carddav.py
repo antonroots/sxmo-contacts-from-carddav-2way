@@ -39,6 +39,32 @@ def download(url, user, passwd, auth, verify, filename):
     print('[i] All saved.')
 
 
+def sync(url, user, passwd, auth, verify, filename):
+    print('[i] Syncing from', url, '...')
+    print('[i] Downloading the addressbook...')
+    dav = carddav.PyCardDAV(url, user=user, passwd=passwd, auth=auth,
+                            verify=verify)
+    abook = dav.get_abook()
+    nCards = len(abook.keys())
+    print('[i] Found', nCards, 'cards.')
+
+    flocal = open(filename, "r")
+    f = open(filename, "w")
+
+    curr = 1
+    for href, etag in abook.items():
+        print('\r[i] Fetching', curr, 'of', nCards, )
+        sys.stdout.flush()
+        curr += 1
+        card = dav.get_vcard(href)
+        tsv = vcard_to_tsv.vcard_to_tsv(card.decode('utf8'))
+        if not tsv == "":
+            f.write(tsv + '\n')
+    print('')
+    f.close()
+    print('[i] All saved.')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("url", type=str, help="CardDav URL", default=URL)
