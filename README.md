@@ -32,8 +32,8 @@ When using Nextcloud:
 And then:
 
 ```commandline
-git clone https://github.com/ElishaAz/sxmo-contacts-from-carddav
-cd sxmo-contacts-from-carddav
+git clone https://github.com/antonroots/sxmo-contacts-from-carddav-2way
+cd sxmo-contacts-from-carddav-2way
 ./install.sh
 ```
 
