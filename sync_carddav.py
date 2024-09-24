@@ -3,6 +3,7 @@
 import os
 import sys
 import uuid
+import csv
 import getpass
 from io import StringIO
 
@@ -41,17 +42,21 @@ def download(url, user, passwd, auth, verify, filename):
 
 def sync(url, user, passwd, auth, verify, filename):
     print('[i] Syncing from', url, '...')
-    print('[i] Downloading the addressbook...')
+    print('[i] Getting the local addressbook...')
     dav = carddav.PyCardDAV(url, user=user, passwd=passwd, auth=auth,
                             verify=verify)
     abook = dav.get_abook()
     nCards = len(abook.keys())
     print('[i] Found', nCards, 'cards.')
-
-    flocal = open(filename, "r")
+    local = dict()
+    remote = dict()
+    with open(filename, "r") as flocal:
+        tsv_file = csv.reader(flocal, delimiter="\t")
+        for line in tsv_file:
+            local[line.join("\t")] = bool(1)
     f = open(filename, "w")
-
     curr = 1
+    print('[i] Downloading the remote addressbook...')
     for href, etag in abook.items():
         print('\r[i] Fetching', curr, 'of', nCards, )
         sys.stdout.flush()
@@ -59,8 +64,19 @@ def sync(url, user, passwd, auth, verify, filename):
         card = dav.get_vcard(href)
         tsv = vcard_to_tsv.vcard_to_tsv(card.decode('utf8'))
         if not tsv == "":
-            f.write(tsv + '\n')
+            remote[tsv] = bool(1)
+            #f.write(tsv + '\n')
     print('')
+    print('[i] Mixing everything...')
+    local.update(remote)
+    nCards = len(local.keys())
+    curr = 1
+    for mix, b in local.items():
+        print('\r[i] Writing', curr, 'of', nCards, )
+        sys.stdout.flush()
+        curr += 1
+        if not mix == "":
+            f.write(mix + '\n')
     f.close()
     print('[i] All saved.')
 
@@ -90,7 +106,7 @@ def main():
     if passwd is None:
         passwd = getpass.getpass(user + '\'s password: ')
 
-    download(url, user, passwd, auth, verify, file)
+    sync(url, user, passwd, auth, verify, file)
 
 
 if __name__ == '__main__':
