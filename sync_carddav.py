@@ -53,7 +53,7 @@ def sync(url, user, passwd, auth, verify, filename):
     with open(filename, "r") as flocal:
         tsv_file = csv.reader(flocal, delimiter="\t")
         for line in tsv_file:
-            local[line.join("\t")] = bool(1)
+            local["\t".join(line)] = bool(1)
     f = open(filename, "w")
     curr = 1
     print('[i] Downloading the remote addressbook...')
